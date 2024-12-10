@@ -72,7 +72,7 @@ public:
 
 public:
 	
-	TSharedPtr<IOnlineSession, ESPMode::ThreadSafe> OnlineSessionInteface;
+	TSharedPtr<IOnlineSession, ESPMode::ThreadSafe> OnlineSessionInterface;
 protected:
 	UFUNCTION(BlueprintCallable)
 	void CreateGameSession();
@@ -81,9 +81,11 @@ protected:
 
 	void OnCreateGameSessionComplete(FName SessionName, bool bWasSuccessful);
 	void OnFindGameSessionComplete(bool bWasSuccessful);
+	void OnJoinGameSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
 private:
 	FOnCreateSessionCompleteDelegate CreateSessionCompleteDelegate;
 	FOnFindSessionsCompleteDelegate FindSessionsCompleteDelegate;
+	FOnJoinSessionCompleteDelegate JoinSessionCompleteDelegate;
 	TSharedPtr<FOnlineSessionSearch> SessionSearch;
 };
 
