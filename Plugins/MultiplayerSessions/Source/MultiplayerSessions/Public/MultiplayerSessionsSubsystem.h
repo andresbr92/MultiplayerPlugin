@@ -16,11 +16,14 @@ class MULTIPLAYERSESSIONS_API UMultiplayerSessionsSubsystem : public UGameInstan
 	GENERATED_BODY()
 public:
 	UMultiplayerSessionsSubsystem();
-
+	UFUNCTION(BlueprintCallable)
 	void CreateSession(int32 MaxPublicConnections, FString MatchType);
+	UFUNCTION(BlueprintCallable)
 	void FindSessions(int32 MaxSearchResults);
 	void JoinSession(const FOnlineSessionSearchResult& SessionResult);
+	UFUNCTION(BlueprintCallable)
 	void DestroySession();
+	UFUNCTION(BlueprintCallable)
 	void StartSession();
 	
 protected:

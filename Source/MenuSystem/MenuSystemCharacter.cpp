@@ -14,6 +14,7 @@
 #include "OnlineSubsystemUtils.h"
 #include "OnlineSessionSettings.h"
 #include "Online/OnlineSessionNames.h"
+#include "MultiplayerSessionsSubsystem.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -72,6 +73,8 @@ JoinSessionCompleteDelegate(FOnJoinSessionCompleteDelegate::CreateUObject(this, 
 			}
 		}
 	}
+	UGameInstance* GameInstance = GetGameInstance();
+	MultiplayerSessionsSubsystem = GameInstance->GetSubsystem<UMultiplayerSessionsSubsystem>();
 }
 
 //////////////////////////////////////////////////////////////////////////

@@ -70,6 +70,8 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
+	class UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;
+
 public:
 	
 	TSharedPtr<IOnlineSession, ESPMode::ThreadSafe> OnlineSessionInterface;
@@ -87,5 +89,7 @@ private:
 	FOnFindSessionsCompleteDelegate FindSessionsCompleteDelegate;
 	FOnJoinSessionCompleteDelegate JoinSessionCompleteDelegate;
 	TSharedPtr<FOnlineSessionSearch> SessionSearch;
+	// Pointer to the multiplayer subsystem
+	
 };
 
