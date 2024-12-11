@@ -73,8 +73,10 @@ JoinSessionCompleteDelegate(FOnJoinSessionCompleteDelegate::CreateUObject(this, 
 			}
 		}
 	}
-	UGameInstance* GameInstance = GetGameInstance();
-	MultiplayerSessionsSubsystem = GameInstance->GetSubsystem<UMultiplayerSessionsSubsystem>();
+	
+		
+	
+
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -261,6 +263,30 @@ void AMenuSystemCharacter::OnJoinGameSessionComplete(FName SessionName, EOnJoinS
     }
 	
 		
+}
+
+void AMenuSystemCharacter::CustomTestDelegate(bool bWasSuccessful)
+{
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, TEXT("Custom Test Delegate"));
+	}
+}
+
+void AMenuSystemCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	const UGameInstance* GameInstance = GetGameInstance();
+	
+	MultiplayerSessionsSubsystem = GameInstance->GetSubsystem<UMultiplayerSessionsSubsystem>();
+	if (MultiplayerSessionsSubsystem)
+	{
+		MultiplayerSessionsSubsystem->MultiplayerOnCreateSessionComplete.AddDynamic(this, &AMenuSystemCharacter::CustomTestDelegate);
+	
+	} else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, TEXT("Failed to get Multiplayer Sessions Subsystem"));
+	}
 }
 
 

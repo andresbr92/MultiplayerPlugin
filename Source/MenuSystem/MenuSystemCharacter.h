@@ -8,6 +8,7 @@
 #include "Logging/LogMacros.h"
 #include "MenuSystemCharacter.generated.h"
 
+class UMultiplayerSessionsSubsystem;
 class USpringArmComponent;
 class UCameraComponent;
 class UInputMappingContext;
@@ -70,7 +71,7 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
-	class UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;
+	UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;
 
 public:
 	
@@ -84,6 +85,10 @@ protected:
 	void OnCreateGameSessionComplete(FName SessionName, bool bWasSuccessful);
 	void OnFindGameSessionComplete(bool bWasSuccessful);
 	void OnJoinGameSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
+	UFUNCTION()
+	void CustomTestDelegate(bool bWasSuccessful);
+	//add begin play
+	virtual void BeginPlay() override;
 private:
 	FOnCreateSessionCompleteDelegate CreateSessionCompleteDelegate;
 	FOnFindSessionsCompleteDelegate FindSessionsCompleteDelegate;
