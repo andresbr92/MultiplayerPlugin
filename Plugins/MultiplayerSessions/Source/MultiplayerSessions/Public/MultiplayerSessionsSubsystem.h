@@ -51,7 +51,7 @@ class MULTIPLAYERSESSIONS_API UMultiplayerSessionsSubsystem : public UGameInstan
 public:
 	UMultiplayerSessionsSubsystem();
 	UFUNCTION(BlueprintCallable)
-	void CreateSession(int32 MaxPublicConnections, FString MatchType);
+	void CreateSession(int32 MaxPublicConnections, FString MatchType, FString Path);
 	UFUNCTION(BlueprintCallable)
 	void FindSessions(int32 MaxSearchResults);
 	UFUNCTION(BlueprintCallable)
@@ -87,6 +87,8 @@ private:
 	TSharedPtr<FOnlineSessionSettings> LastSessionSettings;
 	// Session Search
 	TSharedPtr<FOnlineSessionSearch> SessionSearch;
+	// Path to trave
+	FString PathToTravel{FString("")};
 	
 	//
 	// To add the Online Session Interface delegate list.
