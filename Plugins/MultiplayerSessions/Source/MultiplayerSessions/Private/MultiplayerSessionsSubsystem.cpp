@@ -64,22 +64,71 @@ void UMultiplayerSessionsSubsystem::FindSessions(int32 MaxSearchResults)
 	{
 		return;
 	}
-	SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate);
+	FindSessionCompleteDelegateHandle = SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate);
 	SessionSearch = MakeShareable(new FOnlineSessionSearch);
 	SessionSearch->MaxSearchResults = MaxSearchResults;
 	SessionSearch->bIsLanQuery = false;
 	SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
 	ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
-	SessionInterface->FindSessions(*LocalPlayer->GetPreferredUniqueNetId(), SessionSearch.ToSharedRef());
+	bool bFindSessionSuccess = SessionInterface->FindSessions(*LocalPlayer->GetPreferredUniqueNetId(),
+	                                                          SessionSearch.ToSharedRef());
+	if (!bFindSessionSuccess)
+	{
+		SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionCompleteDelegateHandle);
+	}
 }
 
-void UMultiplayerSessionsSubsystem::JoinSession(const FOnlineSessionSearchResult& SessionResult)
+void UMultiplayerSessionsSubsystem::JoinSession(FSessionInfo SessionInfo)
 {
 	if (!SessionInterface.IsValid()) return;
-	
-	
-	SessionInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
+	JoinSessionCompleteDelegateHandle = SessionInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
+	for (auto DesiredSession: SessionSearch->SearchResults)
+	{
+		FString Id = DesiredSession.GetSessionIdStr();
+		FString User = DesiredSession.Session.OwningUserName;
+		FString MatchType;
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(
+				-1,
+				150.f,
+				FColor::Cyan,
+				FString::Printf(TEXT("All the sessions: %s"), *MatchType)
+			);
+		}
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(
+				-1,
+				150.f,
+				FColor::Cyan,
+				FString::Printf(TEXT("The session name provided: %s"), *SessionInfo.MatchType)
+			);
+		}
+		DesiredSession.Session.SessionSettings.Get(FName("MatchType"), MatchType);
+		if (MatchType == SessionInfo.MatchType)
+		{
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(
+					-1,
+					150.f,
+					FColor::Cyan,
+					FString::Printf(TEXT("Joining Match Type: %s"), *MatchType)
+				);
+			}
+			DesiredSession.Session.SessionSettings.bUseLobbiesIfAvailable = true;
+
+			const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+			bool bJoinSessionSuccess = SessionInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, DesiredSession);
+			if (!bJoinSessionSuccess)
+			{
+				SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
+			}
+		}
+	}
 }
+
 
 void UMultiplayerSessionsSubsystem::DestroySession()
 {
@@ -119,10 +168,10 @@ void UMultiplayerSessionsSubsystem::OnFindSessionComplete(bool bWasSuccessful)
 			SessionInfos.Add(SessionInfo);
 		}
 	}
-	FOnlineSessionSearchCustom CustomSearch;
-	CustomSearch.SearchResults = SessionInfos;
+	FOnlineSessionSearchCustom SearchResults;
+	SearchResults.SearchResults = SessionInfos;
 
-	MultiplayerOnFindSessionsComplete.Broadcast(CustomSearch, bWasSuccessful);
+	MultiplayerOnFindSessionsComplete.Broadcast(SearchResults, bWasSuccessful);
 
 	SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionCompleteDelegateHandle);
 }
@@ -130,6 +179,25 @@ void UMultiplayerSessionsSubsystem::OnFindSessionComplete(bool bWasSuccessful)
 void UMultiplayerSessionsSubsystem::OnJoinSessionComplete(FName SessionName,
 	EOnJoinSessionCompleteResult::Type Result)
 {
+	if (!SessionInterface.IsValid()) return;
+	// Access de IP address to travel to
+	FString Address;
+
+	if (SessionInterface->GetResolvedConnectString(NAME_GameSession, Address))
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 10.f,FColor::Blue, FString::Printf(TEXT("The IP address is: %s"), *Address));
+		}
+		APlayerController* PlayerController = GetGameInstance()->GetFirstLocalPlayerController();
+		if (PlayerController)
+		{
+			PlayerController->ClientTravel(Address, TRAVEL_Absolute);
+		}
+	}
+	SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
+	
+	
 	
 }
 

@@ -39,7 +39,7 @@ struct FOnlineSessionSearchCustom
 };
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnCreateSessionComplete, bool, bWasSuccessful);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FMultiplayerOnFindSessionsComplete, FOnlineSessionSearchCustom, Result, bool, bWasSuccessful);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnJoinSessionComplete, EOnJoinSessionCompleteResult::Type, Result);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnJoinSessionComplete, FSessionInfo, SessionInfo);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnDestroySessionComplete, bool, bWasSuccessful);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnStartSessionComplete, bool, bWasSuccessful);
 
@@ -54,7 +54,8 @@ public:
 	void CreateSession(int32 MaxPublicConnections, FString MatchType);
 	UFUNCTION(BlueprintCallable)
 	void FindSessions(int32 MaxSearchResults);
-	void JoinSession(const FOnlineSessionSearchResult& SessionResult);
+	UFUNCTION(BlueprintCallable)
+	void JoinSession(FSessionInfo SessionInfo);
 	UFUNCTION(BlueprintCallable)
 	void DestroySession();
 	UFUNCTION(BlueprintCallable)
@@ -66,6 +67,7 @@ public:
 	FMultiplayerOnCreateSessionComplete MultiplayerOnCreateSessionComplete;
 	UPROPERTY(BlueprintAssignable)
 	FMultiplayerOnFindSessionsComplete MultiplayerOnFindSessionsComplete;
+	UPROPERTY(BlueprintAssignable)
 	FMultiplayerOnJoinSessionComplete MultiplayerOnJoinSessionsComplete;
 	UPROPERTY(BlueprintAssignable)
 	FMultiplayerOnDestroySessionComplete MultiplayerOnDestroySessionComplete;
