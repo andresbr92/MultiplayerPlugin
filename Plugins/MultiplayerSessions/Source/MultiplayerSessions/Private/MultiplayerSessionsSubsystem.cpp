@@ -60,14 +60,13 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 MaxPublicConnections, FS
 
 void UMultiplayerSessionsSubsystem::FindSessions(int32 MaxSearchResults)
 {
-	
 	if (!SessionInterface.IsValid())
 	{
 		return;
 	}
 	SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate);
 	SessionSearch = MakeShareable(new FOnlineSessionSearch);
-	SessionSearch->MaxSearchResults = 10000;
+	SessionSearch->MaxSearchResults = MaxSearchResults;
 	SessionSearch->bIsLanQuery = false;
 	SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
 	ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
@@ -76,6 +75,9 @@ void UMultiplayerSessionsSubsystem::FindSessions(int32 MaxSearchResults)
 
 void UMultiplayerSessionsSubsystem::JoinSession(const FOnlineSessionSearchResult& SessionResult)
 {
+	if (!SessionInterface.IsValid()) return;
+	
+	
 	SessionInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
 }
 
@@ -97,18 +99,38 @@ void UMultiplayerSessionsSubsystem::OnCreateSessionComplete(FName SessionName, b
 		World->ServerTravel(FString("/Game/ThirdPerson/Maps/Lobby?listen"));
 		
 	}
-	
+	SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
 }
 
 void UMultiplayerSessionsSubsystem::OnFindSessionComplete(bool bWasSuccessful)
 {
-	// FOnlineSessionSearchCustom* CustomSearch = new FOnlineSessionSearchCustom();
-	// CustomSearch->SearchResults = SessionSearch->SearchResults;
+	
+	TArray<FSessionInfo> SessionInfos;
+	if (bWasSuccessful)
+	{
+		for (auto Result: SessionSearch->SearchResults)
+		{
+			FSessionInfo SessionInfo;
+			SessionInfo.SessionId = Result.GetSessionIdStr();
+			SessionInfo.OwningUserName = Result.Session.OwningUserName;
+			FString MatchType;
+			Result.Session.SessionSettings.Get(FName("MatchType"), MatchType);
+			SessionInfo.MatchType = MatchType;
+			SessionInfos.Add(SessionInfo);
+		}
+	}
+	FOnlineSessionSearchCustom CustomSearch;
+	CustomSearch.SearchResults = SessionInfos;
+
+	MultiplayerOnFindSessionsComplete.Broadcast(CustomSearch, bWasSuccessful);
+
+	SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionCompleteDelegateHandle);
 }
 
 void UMultiplayerSessionsSubsystem::OnJoinSessionComplete(FName SessionName,
 	EOnJoinSessionCompleteResult::Type Result)
 {
+	
 }
 
 void UMultiplayerSessionsSubsystem::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)

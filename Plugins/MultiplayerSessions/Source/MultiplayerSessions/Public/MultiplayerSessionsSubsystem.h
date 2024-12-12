@@ -7,19 +7,39 @@
 #include "OnlineSessionSettings.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "MultiplayerSessionsSubsystem.generated.h"
+USTRUCT(BlueprintType)
+struct FSessionInfo
+{
+	GENERATED_BODY()
 
+public:
+	UPROPERTY(BlueprintReadOnly)
+	FString MatchType;
+	UPROPERTY(BlueprintReadOnly)
+	FString SessionId;
+
+	UPROPERTY(BlueprintReadOnly)
+	FString OwningUserName;
+
+	UPROPERTY(BlueprintReadOnly)
+	int32 NumOpenPublicConnections;
+
+	UPROPERTY(BlueprintReadOnly)
+	int32 PingInMs;
+};
 /**
  *  Declaring our own custom delegates for components that uses this subsystem
  */
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FOnlineSessionSearchCustom
 {
 	GENERATED_BODY()
-	TArray<FOnlineSessionSearchResult> SearchResults;
+	UPROPERTY(BlueprintReadOnly)
+	TArray<FSessionInfo> SearchResults;
 };
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnCreateSessionComplete, bool, bWasSuccessful);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FMultiplayerOnFindSessionsComplete, FOnlineSessionSearchCustom, Result, bool, bWasSuccessful);
-// DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnJoinSessionComplete, EOnJoinSessionCompleteResult::Type Result);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnJoinSessionComplete, EOnJoinSessionCompleteResult::Type, Result);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnDestroySessionComplete, bool, bWasSuccessful);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnStartSessionComplete, bool, bWasSuccessful);
 
@@ -46,20 +66,26 @@ public:
 	FMultiplayerOnCreateSessionComplete MultiplayerOnCreateSessionComplete;
 	UPROPERTY(BlueprintAssignable)
 	FMultiplayerOnFindSessionsComplete MultiplayerOnFindSessionsComplete;
-	// FMultiplayerOnJoinSessionComplete MultiplayerOnJoinSessionsComplete;
+	FMultiplayerOnJoinSessionComplete MultiplayerOnJoinSessionsComplete;
 	UPROPERTY(BlueprintAssignable)
 	FMultiplayerOnDestroySessionComplete MultiplayerOnDestroySessionComplete;
 	UPROPERTY(BlueprintAssignable)
 	FMultiplayerOnStartSessionComplete MultiplayerOnStartSessionComplete;
 protected:
+	// Bound functions
 	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
 	void OnFindSessionComplete(bool bWasSuccessful);
 	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
 	void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);
 	void OnStartSessionComplete(FName SessionName, bool bWasSuccessful);
 private:
+	// Main interface
 	IOnlineSessionPtr SessionInterface;
+	// Session Settings
 	TSharedPtr<FOnlineSessionSettings> LastSessionSettings;
+	// Session Search
+	TSharedPtr<FOnlineSessionSearch> SessionSearch;
+	
 	//
 	// To add the Online Session Interface delegate list.
 	// We'll bind our MultiplayerSessionSubsystem internal callbacks to these
@@ -78,6 +104,5 @@ private:
 	
 	FOnStartSessionCompleteDelegate StartSessionCompleteDelegate;
 	FDelegateHandle StartSessionCompleteDelegateHandle;
-	// session search
-	TSharedPtr<FOnlineSessionSearch> SessionSearch;
+
 };
