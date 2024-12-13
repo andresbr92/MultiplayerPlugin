@@ -13,18 +13,18 @@ struct FSessionInfo
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "SessionInfo")
 	FString MatchType;
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "SessionInfo")
 	FString SessionId;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "SessionInfo")
 	FString OwningUserName;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "SessionInfo")
 	int32 NumOpenPublicConnections;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "SessionInfo")
 	int32 PingInMs;
 };
 /**
@@ -34,7 +34,7 @@ USTRUCT(BlueprintType)
 struct FOnlineSessionSearchCustom
 {
 	GENERATED_BODY()
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "SessionSearch")
 	TArray<FSessionInfo> SearchResults;
 };
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnCreateSessionComplete, bool, bWasSuccessful);
@@ -50,19 +50,20 @@ class MULTIPLAYERSESSIONS_API UMultiplayerSessionsSubsystem : public UGameInstan
 	GENERATED_BODY()
 public:
 	UMultiplayerSessionsSubsystem();
-	UFUNCTION(BlueprintCallable)
-	void CreateSession(int32 MaxPublicConnections, FString MatchType);
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Multiplayer Sessions")
+	void CreateSession(int32 MaxPublicConnections, FString MatchType, FString Path);
+	UFUNCTION(BlueprintCallable, Category = "Multiplayer Sessions")
 	void FindSessions(int32 MaxSearchResults);
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Multiplayer Sessions")
 	void JoinSession(FSessionInfo SessionInfo);
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Multiplayer Sessions")
 	void DestroySession();
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Multiplayer Sessions")
 	void StartSession();
 	/**
 	 *  Our own custom delegates for the components to bind callbacks
 	 */
+	// Denominated Delegate Instances
 	UPROPERTY(BlueprintAssignable)
 	FMultiplayerOnCreateSessionComplete MultiplayerOnCreateSessionComplete;
 	UPROPERTY(BlueprintAssignable)
@@ -88,7 +89,7 @@ private:
 	// Session Search
 	TSharedPtr<FOnlineSessionSearch> SessionSearch;
 	// Path to trave
-	FString PathToTravel{FString("")};
+	FString PathToTravel{FString("/Game/ThirdPerson/Maps/Lobby?listen")};
 	
 	//
 	// To add the Online Session Interface delegate list.
