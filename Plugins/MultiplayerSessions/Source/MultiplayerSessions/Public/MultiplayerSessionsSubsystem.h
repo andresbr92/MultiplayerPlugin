@@ -51,7 +51,7 @@ class MULTIPLAYERSESSIONS_API UMultiplayerSessionsSubsystem : public UGameInstan
 public:
 	UMultiplayerSessionsSubsystem();
 	UFUNCTION(BlueprintCallable)
-	void CreateSession(int32 MaxPublicConnections, FString MatchType, FString Path);
+	void CreateSession(int32 MaxPublicConnections, FString MatchType);
 	UFUNCTION(BlueprintCallable)
 	void FindSessions(int32 MaxSearchResults);
 	UFUNCTION(BlueprintCallable)
@@ -108,5 +108,9 @@ private:
 	
 	FOnStartSessionCompleteDelegate StartSessionCompleteDelegate;
 	FDelegateHandle StartSessionCompleteDelegateHandle;
+
+	bool bCreateSessionOnDestroy{ false };
+	int32 LastNumPublicConnections;
+	FString LastMatchType;
 
 };

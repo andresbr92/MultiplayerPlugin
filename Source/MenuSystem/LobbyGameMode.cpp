@@ -12,19 +12,14 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 	if (GameState)
 	{
 		int32 NumberOfPlayers = GameState.Get()->PlayerArray.Num();
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Yellow, FString::Printf(TEXT("Number of players: %d"), NumberOfPlayers));
-		}
+		
+		UE_LOG(LogTemp, Warning, TEXT("Number of players: %d"), NumberOfPlayers);
 		// access to the player state
 		APlayerState* PlayerState = NewPlayer->GetPlayerState<APlayerState>();
 		if (PlayerState)
 		{
 			FString PlayerName = PlayerState->GetPlayerName();
-			if (GEngine)
-			{
-				GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Yellow, FString::Printf(TEXT("Player name: %s"), *PlayerName));
-			}
+			UE_LOG(LogTemp, Warning, TEXT("Player name: %s"), *PlayerName);
 		}
 	}
 }
@@ -35,18 +30,14 @@ void ALobbyGameMode::Logout(AController* Exiting)
 	if (GameState)
 	{
 		int32 NumberOfPlayers = GameState.Get()->PlayerArray.Num();
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Yellow, FString::Printf(TEXT("Number of players: %d"), NumberOfPlayers - 1));
-		}
+		
+		UE_LOG(LogTemp, Warning, TEXT("Number of players: %d"), NumberOfPlayers - 1);
 	}
 	APlayerState* PlayerState = Exiting->GetPlayerState<APlayerState>();
 	if (PlayerState)
 	{
 		FString PlayerName = PlayerState->GetPlayerName();
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Yellow, FString::Printf(TEXT("Player name: %s"), *PlayerName));
-		}
+		
+		UE_LOG(LogTemp, Warning, TEXT("Player name: %s"), *PlayerName);
 	}
 }

@@ -15,22 +15,24 @@ JoinSessionCompleteDelegate(FOnJoinSessionCompleteDelegate::CreateUObject(this, 
 DestroySessionCompleteDelegate(FOnDestroySessionCompleteDelegate::CreateUObject(this, &ThisClass::OnDestroySessionComplete)),
 StartSessionCompleteDelegate(FOnStartSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnStartSessionComplete))
 {
-	IOnlineSubsystem* Subsystem = Online::GetSubsystem(UObject::GetWorld()); //TODO: entender por que se pone UObject antes
+	IOnlineSubsystem* Subsystem = Online::GetSubsystem(UObject::GetWorld());
 	if (Subsystem)
 	{
 		SessionInterface = Subsystem->GetSessionInterface();
 	}
 }
 
-void UMultiplayerSessionsSubsystem::CreateSession(int32 MaxPublicConnections, FString MatchType, FString Path)
+void UMultiplayerSessionsSubsystem::CreateSession(int32 MaxPublicConnections, FString MatchType)
 {
 	if (!SessionInterface.IsValid())
 		return;
-	PathToTravel = Path;
 	auto ExistingSession = SessionInterface->GetNamedSession(NAME_GameSession);
 	if (ExistingSession != nullptr)
 	{
-		SessionInterface->DestroySession(NAME_GameSession);
+		bCreateSessionOnDestroy = true;
+		LastNumPublicConnections = MaxPublicConnections;
+		LastMatchType = MatchType;
+		DestroySession();
 	}
 
     CreateSessionCompleteDelegateHandle = SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
@@ -43,7 +45,6 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 MaxPublicConnections, FS
 	LastSessionSettings->bShouldAdvertise = true;
 	LastSessionSettings->bUsesPresence = true;
 	LastSessionSettings->bUseLobbiesIfAvailable = true;
-	LastSessionSettings->BuildUniqueId = 1;
 	LastSessionSettings->Set(FName("MatchType"), MatchType, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 	ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
 	
@@ -93,15 +94,8 @@ void UMultiplayerSessionsSubsystem::JoinSession(FSessionInfo SessionInfo)
 		DesiredSession.Session.SessionSettings.Get(FName("MatchType"), MatchType);
 		if (MatchType == SessionInfo.MatchType)
 		{
-			if (GEngine)
-			{
-				GEngine->AddOnScreenDebugMessage(
-					-1,
-					150.f,
-					FColor::Cyan,
-					FString::Printf(TEXT("Joining Match Type: %s"), *MatchType)
-				);
-			}
+			
+			UE_LOG(LogTemp, Warning, TEXT("Joining Match Type: %s"), *MatchType);
 			DesiredSession.Session.SessionSettings.bUseLobbiesIfAvailable = true;
 
 			const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
@@ -118,7 +112,19 @@ void UMultiplayerSessionsSubsystem::JoinSession(FSessionInfo SessionInfo)
 
 void UMultiplayerSessionsSubsystem::DestroySession()
 {
-	SessionInterface->AddOnDestroySessionCompleteDelegate_Handle(DestroySessionCompleteDelegate);
+	if (!SessionInterface.IsValid())
+	{
+		MultiplayerOnDestroySessionComplete.Broadcast(false);
+		return;
+	}
+	DestroySessionCompleteDelegateHandle = SessionInterface->AddOnDestroySessionCompleteDelegate_Handle(DestroySessionCompleteDelegate);
+	bool bDestroySessionSuccess = SessionInterface->DestroySession(NAME_GameSession);
+	if (!bDestroySessionSuccess)
+	{
+		SessionInterface->ClearOnDestroySessionCompleteDelegate_Handle(DestroySessionCompleteDelegateHandle);
+		MultiplayerOnDestroySessionComplete.Broadcast(false);
+	}
+	
 }
 
 void UMultiplayerSessionsSubsystem::StartSession()
@@ -131,7 +137,7 @@ void UMultiplayerSessionsSubsystem::OnCreateSessionComplete(FName SessionName, b
 	UWorld* World = GetWorld();
 	if (World)
 	{
-		World->ServerTravel(PathToTravel);
+		World->ServerTravel(FString("/Game/ThirdPerson/Maps/Lobby?listen"));
 		
 	}
 	SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
@@ -172,10 +178,8 @@ void UMultiplayerSessionsSubsystem::OnJoinSessionComplete(FName SessionName,
 
 	if (SessionInterface->GetResolvedConnectString(NAME_GameSession, Address))
 	{
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 10.f,FColor::Blue, FString::Printf(TEXT("The IP address is: %s"), *Address));
-		}
+		
+		UE_LOG(LogTemp, Warning, TEXT("The IP address is: %s"), *Address);
 		APlayerController* PlayerController = GetGameInstance()->GetFirstLocalPlayerController();
 		if (PlayerController)
 		{
@@ -188,6 +192,16 @@ void UMultiplayerSessionsSubsystem::OnJoinSessionComplete(FName SessionName,
 
 void UMultiplayerSessionsSubsystem::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
 {
+	if (SessionInterface)
+	{
+		SessionInterface->ClearOnDestroySessionCompleteDelegate_Handle(DestroySessionCompleteDelegateHandle);
+	}
+	if (bWasSuccessful && bCreateSessionOnDestroy)
+	{
+		bCreateSessionOnDestroy = false;
+		CreateSession(LastNumPublicConnections, LastMatchType);
+	}
+	MultiplayerOnDestroySessionComplete.Broadcast(bWasSuccessful);
 }
 
 void UMultiplayerSessionsSubsystem::OnStartSessionComplete(FName SessionName, bool bWasSuccessful)
